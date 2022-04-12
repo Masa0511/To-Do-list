@@ -1,0 +1,116 @@
+{% extends 'to_do_list/base.html' %}
+{% load number_of_days %}
+{% load static %}
+
+{% block content %}
+<div class="main">
+  <div class="block">
+    <h3>タスクの追加</h3>
+    <form>
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">期日:</label>
+        {{ to_do_form.deadline }}
+      </div>
+      <div class="form-group">
+        <label class="form-label">タスク名:</label>
+        {{ to_do_form.task }}
+      </div>
+      <button type="submit" class="btn btn-primary">追加</button>
+    </form>
+  </div>
+  <h3>現在：{{ today }}</h3>
+  <div class="block">
+  <h3>期限後未完了タスク</h3>
+    <table class="table">
+      <tr>
+        <th scope="col"></th>
+        <th scope="col">超過日数</th>
+        <th scope="col">締切日</th>
+        <th scope="col">タスク</th>
+      </tr>
+      {% for item in after_deadline_task %}
+      <tr>
+        <td><a type="button" class="btn btn-secondary" href="{% url 'condition' item.id %}">完了</a></td>
+        <td>{{ today | after_deadline:item }}日</td>
+        <td>{{ item.deadline }}</td>
+        <td>{{ item.task }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="block">
+    <h3>未完了タスク</h3>
+    <table class="table">
+      <tr>
+        <th scope="col"></th>
+        <th scope="col">残り日数</th>
+        <th scope="col">締切日</th>
+        <th scope="col">タスク</th>
+      </tr>
+      {% for item in incomplete_task %}
+      <tr>
+        <td><a type="button" class="btn btn-secondary" href="{% url 'condition' item.id %}">完了</a></td>
+        <td>{{ item | days_remaining:today }}日</td>
+        <td>{{ item.deadline }}</td>
+        <td>{{ item.task }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="block">
+    <h3>完了タスク</h3>
+    <table class="table">
+      <tr>
+        <th scope="col"></th>
+        <th scope="col">締切日</th>
+        <th scope="col">タスク</th>
+      </tr>
+      {% for item in complete_task %}
+      <tr>
+        <td><a type="button" class="btn btn-secondary" href="{% url 'condition' item.id %}">未完了</a></td>
+        <td>{{ item.deadline }}</td>
+        <td>{{ item.task }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+<div style="position:relative; width:500px;height:500px;">
+  <canvas id="myChart" width="400" height="400"></canvas>
+</div>
+<script>
+const ctx = document.getElementById('myChart');
+const myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['期限前未完了', '期限後未完了'],
+        datasets: [{
+            data: {{ number_of_task }},
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            yAxes: [
+              {
+                ticks: {
+                  min: 0,
+                  stepSize: 1,
+              }
+            }
+            ]
+        }
+    }
+});
+</script>
+
+{% endblock %}
